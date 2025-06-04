@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老鼠吃奶酪游戏</title>
+    <style>
+        #gameCanvas {
+            border: 1px solid #000;
+        }
+        .error-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid black;
+            padding: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="error-popup" id="errorPopup">
+        <img src="炸弹.jpg" alt="炸弹">
+        <p>error</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 图片对象
+        const mouseImg = new Image();
+        mouseImg.src = '老鼠.jpg';
+        const cheeseImg = new Image();
+        cheeseImg.src = '奶酪.jpg';
+        const bombImg = new Image();
+        bombImg.src = '炸弹.jpg';
+        const bgImg = new Image();
+        bgImg.src = '背景.png';
+
+        // 老鼠的初始位置
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height - 150; // 调整老鼠位置
+        let mouseSpeed = 2;
+        let mouseDirection = 1;
+
+        // 奶酪数据，增加尺寸和调整拼音位置
+        const cheeses = [
+            { pinyin: 'qüan', isCorrect: false, x: 100, y: 100 },
+            { pinyin: 'ju', isCorrect: true, x: 250, y: 100 },
+            { pinyin: 'jü', isCorrect: false, x: 400, y: 100 },
+            { pinyin: 'qu', isCorrect: true, x: 550, y: 100 },
+            { pinyin: 'jüan', isCorrect: false, x: 700, y: 100 },
+            { pinyin: 'xu', isCorrect: true, x: 350, y: 200 }
+        ];
+
+        function init() {
+            bgImg.onload = function () {
+                mouseImg.onload = function () {
+                    cheeseImg.onload = function () {
+                        draw();
+                    };
+                };
+            };
+        }
+
+        function draw() {
+            // 绘制背景
+            ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            
+            // 绘制老鼠，尺寸增大到100x100
+            ctx.drawImage(mouseImg, mouseX, mouseY, 100, 100);
+            
+            // 绘制奶酪，尺寸增大到80x80，并将拼音放在奶酪上方
+            cheeses.forEach(cheese => {
+                // 绘制拼音（位置调整到奶酪上方）
+                ctx.font = '24px Arial'; // 增大拼音字体
+                ctx.fillText(cheese.pinyin, cheese.x + 15, cheese.y);
+                
+                // 绘制奶酪
+                ctx.drawImage(cheeseImg, cheese.x, cheese.y + 25, 80, 80); // 调整y坐标并增大尺寸
+            });
+
+            // 老鼠移动逻辑
+            mouseX += mouseSpeed * mouseDirection;
+            if (mouseX > canvas.width - 100 || mouseX < 0) {
+                mouseDirection *= -1;
+            }
+            requestAnimationFrame(draw);
+        }
+
+        // 点击事件处理保持不变
+        canvas.addEventListener('click', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            cheeses.forEach((cheese, index) => {
+                if (x > cheese.x && x < cheese.x + 80 && y > cheese.y + 25 && y < cheese.y + 105) {
+                    if (cheese.isCorrect) {
+                        mouseY = cheese.y + 60; 
+                        mouseX = cheese.x;
+                        cheeses.splice(index, 1); 
+                    } else {
+                        const errorPopup = document.getElementById('errorPopup');
+                        errorPopup.style.display = 'block';
+                        setTimeout(() => {
+                            errorPopup.style.display = 'none';
+                        }, 2000);
+                    }
+                }
+            });
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
